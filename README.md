@@ -1,0 +1,3 @@
+- Syntax versimpelen
+- CST to AST afmaken
+- Rest van checks implementeren
