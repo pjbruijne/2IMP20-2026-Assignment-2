@@ -1,8 +1,6 @@
 module labour::Check
 
 import labour::AST;
-import labour::Parser;
-import labour::CST2AST;
 
 import IO;
 import List;
@@ -24,44 +22,64 @@ import String;
  */
 
 bool checkBoulderWallConfiguration(BoulderingWall wall){
+  bool wallHasVolumeAndRoute = checkWallHasVolumeAndRoute(wall);
   bool numberOfHolds = checkNumberOfHolds(wall);
-
   bool startingLabelLimit = checkStartingHoldsTotalLimit(wall);
   bool unique_end_hold = checkUniqueEndHold(wall);
 
-  return (numberOfHolds && startingLabelLimit && unique_end_hold);
+  return (wallHasVolumeAndRoute && numberOfHolds && startingLabelLimit && unique_end_hold);
 }
 
+// Helpers
+list[Volume] getVolumes(BoulderingWall w) = [*vs | WallVolumeStatement(vs) <- w.content];
+list[Route]  getRoutes(BoulderingWall w)  = [*rs | WallRouteStatement(rs)  <- w.content];
+list[Hold] volumeHolds(Circle(cs))   = [*hs | FrontHolds(hs) <- cs] + [*hs | SideHolds(hs) <- cs];
+list[Hold] volumeHolds(Triangle(ts)) = [*hs | TriangleHolds(_, hs) <- ts];
+list[Hold] getAllHolds(BoulderingWall w) = [*volumeHolds(v) | v <- getVolumes(w)];
 
-// Check that there are at least two holds in the wall
+RouteHolds routeHolds(Route r) {
+  for (s <- r.content) if (RouteHolds(rh) := s) return rh;
+  return RouteHolds([], [], []);
+}
+
+bool isStart(Hold h) = any(s <- h.content, HoldTyping(t) := s, t == start1() || t == start2());
+bool isEnd(Hold h)   = any(s <- h.content, HoldTyping(\end()) := s);
+
+// 1. Every wall must have at least one volume and one route.
+bool checkWallHasVolumeAndRoute(BoulderingWall wall) {
+  return size(getVolumes(wall)) > 0 && size(getRoutes(wall)) > 0;
+}
+
+// 2. Every route must have two or more holds. 
 bool checkNumberOfHolds(BoulderingWall wall) {
   return size(getAllHolds(wall)) >= 2;
 }
 
-// Check that routes have between zero and two hand start holds
+// 3. Every route must have between zero and two hand start holds. 
 bool checkStartingHoldsTotalLimit(BoulderingWall wall) {
   holds = getAllHolds(wall);
-  for (route <- wall.routes) {
+  for (route <- getRoutes(wall)) {
+    rh = routeHolds(route);
     N = 0;
-    for (id <- route.holds.init) {
+    for (id <- rh.init) {
       hold = lookup(holds, id);
-      if (hold.holdtype == start1 || hold.holdtype == start2) {
+      if (isStart(hold)) {
         N = N + 1;
       };
     };
-    for (double <- route.holds.split) {
+    for (double <- rh.split) {
       hold = lookup(holds, double[0]);
-      if (hold.holdtype == start1 || hold.holdtype == start2) {
+      if (isStart(hold)) {
         N = N + 1;
       };
       hold = lookup(holds, double[1]);
-      if (hold.holdtype == start1 || hold.holdtype == start2) {
+      if (isStart(hold)) {
         N = N + 1;
       };
     };
-    for (id <- route.holds.merged) {
+    for (id <- rh.merged) {
       hold = lookup(holds, id);
-      if (hold.holdtype == start1 || hold.holdtype == start2) {
+      if (isStart(hold)) {
         N = N + 1;
       };
     };
@@ -72,39 +90,40 @@ bool checkStartingHoldsTotalLimit(BoulderingWall wall) {
   return true;
 }
 
-// This function will insure that there is only one hold assign to end hold
+// 7. A route has at most two end_holds if it splits, and at most one end_hold if it does not split.
 bool checkUniqueEndHold(BoulderingWall wall){
   holds = getAllHolds(wall);
-  for (route <- wall.routes) {
+  for (route <- getRoutes(wall)) {
+    rh = routeHolds(route);
     found = false;
-    for (id <- route.holds.init) {
+    for (id <- rh.init) {
       hold = lookup(holds, id);
-      if (hold.holdtype == end) {
+      if (isEnd(hold)) {
         if (found) {
           return false;
         };
         found = true;
       };
     };
-    for (double <- route.holds.split) {
+    for (double <- rh.split) {
       hold = lookup(holds, double[0]);
-      if (hold.holdtype == end) {
+      if (isEnd(hold)) {
         if (found) {
           return false;
         };
         found = true;
       };
       hold = lookup(holds, double[1]);
-      if (hold.holdtype == end) {
+      if (isEnd(hold)) {
         if (found) {
           return false;
         };
         found = true;
       };
     };
-    for (id <- route.holds.merged) {
+    for (id <- rh.merged) {
       hold = lookup(holds, id);
-      if (hold.holdtype == end) {
+      if (isEnd(hold)) {
         if (found) {
           return false;
         };
@@ -115,32 +134,11 @@ bool checkUniqueEndHold(BoulderingWall wall){
   return true;
 }
 
-list[Hold] getAllHolds(BoulderingWall wall) {
-  result = for (volume <- wall.volumes) {
-    visit(volume) {
-      case Circle(f, s, _, _, _): {
-        for (hold <- f) {
-          append hold;
-        };
-        for (hold <- s) {
-          append hold;
-        };
-      }
-      case Triangle(_, h, _, _, _, _): {
-        for (hold <- h) {
-          append hold;
-        };
-      }
-    };
-  };
-  return result;
-}
-
 Hold lookup(list[Hold] holds, str id) {
   for (hold <- holds) {
     if (hold.id == id) {
       return hold;
     };
   };
-  return Hold("", Position(0), "", [], 0, none);
+  return Hold("", []);
 }
