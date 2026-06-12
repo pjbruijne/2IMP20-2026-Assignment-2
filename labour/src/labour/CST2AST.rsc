@@ -17,6 +17,8 @@ import labour::Syntax;
  * Map lexical nodes to Rascal primitive types (bool, int, str)
  */
 
+public labour::AST::BoulderingWall cst2ast(start[BoulderingWall] wall) = parseWall(wall);
+
 labour::AST::BoulderingWall parseWall(labour::Syntax::BoulderingWall w) {
     id = w.id;
     content = for(s <- w.content) {
