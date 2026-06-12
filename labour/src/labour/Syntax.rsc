@@ -32,6 +32,12 @@ lexical RouteID = StringLiteral;
 // Simple keywords
 keyword Colour = "green" | "red" | "blue" | "white" | "black" | "pink" | "orange" | "yellow" | "purple";
 keyword TriangleHoldType = "left_holds" | "right_holds" | "bottom_holds";
+keyword ObjectType = "bouldering_wall" | "hold" | "circle" | "triangle";
+keyword ObjectKey = "pos" | "routes" | "volumes" | "depth" | "extrusion"
+    | "side_holds" | "front_holds" | "left_holds" | "right_holds" | "bottom_holds"
+    | "radius" | "angle" | "x" | "y" | "grade" | "corners" | "colours" | "shape" | "rotation"
+    | "start_hold" | "end_hold"
+    ;
 
 // Simple data definitions
 syntax Position = Position_Rel rel | Position_Abs abs;
@@ -43,21 +49,14 @@ syntax PositionTriple =  "[" Position_Abs first "," Position_Abs second "," Posi
 syntax List[&T] = "[" {&T val ","}* values "]";
 
 // Wall Definition
-start syntax BoulderingWall = "bouldering_wall" WallID id "{" WallContent content "}";
-syntax WallContent = WallRoutesStatement routes "," WallVolumesStatement volumes | WallVolumesStatement volumes "," WallRoutesStatement routes;
+start syntax BoulderingWall = "bouldering_wall" WallID id "{" {WallStatement ","}* content "}";
+syntax WallStatement = WallRoutesStatement | WallVolumesStatement;
 syntax WallRoutesStatement = "routes" List[Route] routes;
 syntax WallVolumesStatement = "volumes" List[Volume] volumes;
 
 // Route Definition
-syntax Route = "bouldering_route" RouteID "{" RouteContent "}";
-syntax RouteContent
-    = RouteGradeStatement "," RouteGridBaseStatement "," RouteHoldsList
-    | RouteGradeStatement "," RouteHoldsList "," RouteGridBaseStatement
-    | RouteGridBaseStatement "," RouteGradeStatement "," RouteHoldsList
-    | RouteGridBaseStatement "," RouteHoldsList "," RouteGradeStatement
-    | RouteHoldsList "," RouteGridBaseStatement "," RouteGradeStatement
-    | RouteHoldsList "," RouteGradeStatement "," RouteGridBaseStatement
-    ;
+syntax Route = "bouldering_route" RouteID "{" {RouteStatement ","}* content "}";
+syntax RouteStatement = RouteGradeStatement | RouteGridBaseStatement | RouteHoldsStatement;
 syntax RouteGradeStatement = "grade" ":" StringLiteral;
 syntax RouteGridBaseStatement = "grid_base_point" Position;
 syntax RouteHoldsStatement = "holds" RouteHoldsList;
@@ -69,8 +68,7 @@ syntax VolumeDepthStatement = "depth" ":" SInt;
 // Volume Definitions
 syntax Volume = Circle c | Triangle t;
 // Circle Definitions
-syntax Circle = "circle" "{" CircleContent "}";
-syntax CircleContent = CircleStatement first "," CircleStatement second "," CircleStatement third "," CircleStatement fourth "," CircleStatement fifth;
+syntax Circle = "circle" "{" {CircleStatement ","}* content "}";
 syntax CircleStatement = PosStatement | VolumeDepthStatement | CircleRadiusStatement | CircleSideStatement | CircleFrontStatement;
 syntax CircleSideStatement = "side_holds" List[Hold] side;
 syntax CircleFrontStatement = "front_holds" List[Hold] front;
@@ -83,8 +81,7 @@ syntax TriangleExtrusionStatement = "extrusion" ":" Position_Abs val;
 syntax TriangleCornersStatement = "corners" PositionTriple;
 syntax TriangleHoldsStatement = TriangleHoldType List[Hold] list;
 
-syntax Hold = "hold" HoldID  "{" HoldContent "}";
-syntax HoldContent = {HoldStatement ","}+;
+syntax Hold = "hold" HoldID  "{" {HoldStatement ","}* "}";
 syntax HoldStatement = PosStatement | ShapeStatement | ColourStatement | HoldSpecialStatement | RotationStatement;
 
 syntax ColourStatement = "colours" List[Colour] colours;
