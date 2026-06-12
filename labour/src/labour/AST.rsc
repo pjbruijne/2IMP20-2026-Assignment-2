@@ -6,20 +6,35 @@ module labour::AST
  */
 
 data BoulderingWall(loc src=|unknown:///|)
-  = BoulderingWall(str id, list[Volume] volumes, list[Route] routes);
+  = BoulderingWall(str id, list[WallStatement] content);
+
+data WallStatement = WallRouteStatement(list[Route] routes) | WallVolumeStatement(list[Volume] volumes);
 
 data Route = Route(str grade, Position grid_base, RouteHolds holds);
+data RouteStatement = RouteGrade(str grade) | RouteBase(Position base) | RouteHolds(RouteHolds holds);
 data RouteHolds = RouteHolds(list[str] init, list[tuple[str, str]] split, list[str] merged);
 
 data Volume 
-  = Circle(list[Hold] front_holds, list[Hold] side_holds, Position pos, int depth, int radius)
-  | Triangle(TriangleType ttype, list[Hold] holds, Position pos, int depth, tuple[Position, Position, Position] corners, Position extrusion)
+  = Circle(list[CircleStatement] content)
+  | Triangle(list[TriangleStatement] content)
   ;
-data Hold = Hold(str id, Position pos, str shape, list[Colour] colours, int rotation, HoldType holdtype);
-data Position = Position(int x, int y) | Position(int angle) | \nowhere();
+data CircleStatement 
+  = FrontHolds(list[Hold] front_holds) | SideHolds(list[Hold] side_holds) 
+  | CirclePosition(Position pos) | CircleDepth(int depth) | CircleRadius(int radius)
+  ;
+data TriangleStatement
+  = TriangleHolds(TriangleType ttype, list[Hold] holds) | TrianglePos(Position pos) 
+  | TriangleDepth(int depth) | TriangleCorners(tuple[Position, Position, Position] corners) 
+  | TriangleExtrusion(Position extrusion)
+  ;
+data Hold = Hold(str id, list[HoldStatement] content);
+data HoldStatement
+  = HoldPos(Position pos) | HoldShape(str shape) | HoldColours(list[Colour] colours) | HoldRotation(int rotation) | HoldTyping(HoldType holdtype)
+  ;
+data Position = Position(int x, int y) | Position(int angle);
 
 // Constants
 data Colour = \green() | \red() | \yellow() | \blue() | \orange() | \white() | \black() | \pink() | \purple();
-data HoldType = \simple() | \start1() | \start2() | \end();
-data TriangleType = \none() | \left() | \right() | \bottom() | \error();
+data HoldType = \start1() | \start2() | \end();
+data TriangleType = \left() | \right() | \bottom();
 
