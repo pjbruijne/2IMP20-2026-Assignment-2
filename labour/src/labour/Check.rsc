@@ -1,7 +1,7 @@
 module labour::Check
 
 import labour::AST;
-// import labour::CST2AST;
+import labour::CST2AST;
 
 import IO;
 import List;
@@ -123,7 +123,14 @@ bool checkWallHasVolumeAndRoute(BoulderingWall wall) {
 
 // 2. Every route must have two or more holds. 
 bool checkNumberOfHolds(BoulderingWall wall) {
-  return size(getAllHolds(wall)) >= 2;
+  for (route <- getRoutes(wall)) {
+    rh = routeHolds(route);
+    int count = size(rh.first) + (2 * size(rh.split)) + size(rh.merged);
+    if (count < 2) {
+      return false;
+    };
+  };
+  return true;
 }
 
 // 3. Every route must have between zero and two hand start holds. 
