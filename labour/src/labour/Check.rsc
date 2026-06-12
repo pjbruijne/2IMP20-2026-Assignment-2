@@ -46,12 +46,58 @@ bool checkBoulderWallConfiguration(BoulderingWall wall){
 }
 
 // Helpers
-list[Volume] getVolumes(BoulderingWall w) = [*vs | WallVolumeStatement(vs) <- w.content];
-list[Route]  getRoutes(BoulderingWall w)  = [*rs | WallRouteStatement(rs)  <- w.content];
-list[Hold] volumeHolds(Circle(cs))   = [*hs | FrontHolds(hs) <- cs] + [*hs | SideHolds(hs) <- cs];
-list[Hold] volumeHolds(Triangle(ts)) = [*hs | TriangleHolds(_, hs) <- ts];
-list[Hold] getAllHolds(BoulderingWall w) = [*volumeHolds(v) | v <- getVolumes(w)];
 
+// all volumes in the wall
+list[Volume] getVolumes(BoulderingWall w) {
+  list[Volume] result = [];
+  for (s <- w.content) {
+    if (WallVolumeStatement(vs) := s) {
+      result = result + vs;
+    };
+  };
+  return result;
+}
+
+// all routes in the wall
+list[Route] getRoutes(BoulderingWall w) {
+  list[Route] result = [];
+  for (s <- w.content) {
+    if (WallRouteStatement(rs) := s) {
+      result = result + rs;
+    };
+  };
+  return result;
+}
+
+// all holds inside one volume
+list[Hold] volumeHolds(Volume v) {
+  list[Hold] result = [];
+  switch (v) {
+    case Circle(cs): {
+      for (s <- cs) {
+        if (FrontHolds(hs) := s) { result = result + hs; };
+        if (SideHolds(hs)  := s) { result = result + hs; };
+      };
+    }
+    case Triangle(ts): {
+      for (s <- ts) {
+        if (TriangleHolds(_, hs) := s) { result = result + hs; };
+      };
+    }
+  };
+  return result;
+}
+
+// all holds in the whole wall
+list[Hold] getAllHolds(BoulderingWall w) {
+  list[Hold] result = [];
+  for (v <- getVolumes(w)) {
+    result = result + volumeHolds(v);
+  };
+  return result;
+}
+
+// all holds in a route
 RouteHolds routeHolds(Route r) {
   for (s <- r.content) if (RouteHolds(rh) := s) return rh;
   return RouteHolds([], [], []);
@@ -59,6 +105,16 @@ RouteHolds routeHolds(Route r) {
 
 bool isStart(Hold h) = any(s <- h.content, HoldTyping(t) := s, t == start1() || t == start2());
 bool isEnd(Hold h)   = any(s <- h.content, HoldTyping(\end()) := s);
+
+Hold lookup(list[Hold] holds, str id) {
+  for (hold <- holds) {
+    if (hold.id == id) {
+      return hold;
+    };
+  };
+  return Hold("", []);
+}
+
 
 // 1. Every wall must have at least one volume and one route.
 bool checkWallHasVolumeAndRoute(BoulderingWall wall) {
@@ -188,7 +244,7 @@ bool checkUniqueEndHold(BoulderingWall wall){
 }
 
 // 8. In a route, after a split, there should be no new split if there was a merge before.
-// TODO
+// Done in grammar
 
 // 9. Hold IDs are always defined with four digits, for example, ”0025“.
 // Done in grammar
@@ -287,12 +343,3 @@ bool checkTriangleHasPositionDepthExtrudeAndCorners(BoulderingWall wall) {
 // 20. A triangular volume may only contain holds in the left_holds, right_holds, or
 // bottom_holds lists.
 // Done in grammar
-
-Hold lookup(list[Hold] holds, str id) {
-  for (hold <- holds) {
-    if (hold.id == id) {
-      return hold;
-    };
-  };
-  return Hold("", []);
-}
