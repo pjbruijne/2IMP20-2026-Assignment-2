@@ -1,13 +1,13 @@
 module labour::Check
 
 import labour::AST;
+// import labour::CST2AST;
 
 import IO;
 import List;
 import Set;
 import Prelude;
 import String;
-
 
 /*
  * Implement a well-formedness checker for the LaBouR language. For this you must use the AST.
@@ -97,9 +97,9 @@ list[Hold] getAllHolds(BoulderingWall w) {
   return result;
 }
 
-// all holds in a route
-RouteHolds routeHolds(Route r) {
-  for (s <- r.content) if (RouteHolds(rh) := s) return rh;
+// the holds statement of a route
+RouteStatement routeHolds(Route r) {
+  for (s <- r.content) if (RouteHolds(_, _, _) := s) return s;
   return RouteHolds([], [], []);
 }
 
@@ -132,7 +132,7 @@ bool checkStartingHoldsTotalLimit(BoulderingWall wall) {
   for (route <- getRoutes(wall)) {
     rh = routeHolds(route);
     N = 0;
-    for (id <- rh.init) {
+    for (id <- rh.first) {
       hold = lookup(holds, id);
       if (isStart(hold)) {
         N = N + 1;
@@ -205,7 +205,7 @@ bool checkUniqueEndHold(BoulderingWall wall){
   for (route <- getRoutes(wall)) {
     rh = routeHolds(route);
     found = false;
-    for (id <- rh.init) {
+    for (id <- rh.first) {
       hold = lookup(holds, id);
       if (isEnd(hold)) {
         if (found) {
