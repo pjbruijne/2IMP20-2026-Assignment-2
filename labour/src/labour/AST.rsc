@@ -8,7 +8,7 @@ module labour::AST
 data BoulderingWall(loc src=|unknown:///|)
   = BoulderingWall(str id, list[Volume] volumes, list[Route] routes);
 
-data Route = Route(str grade, Position grid_base, RouteHolds holds);
+data Route = Route(str id, str grade, Position grid_base, RouteHolds holds);
 data RouteHolds = RouteHolds(list[str] init, list[tuple[str, str]] split, list[str] merged);
 
 data Volume 
