@@ -10,13 +10,13 @@ data BoulderingWall(loc src=|unknown:///|)
 
 data WallStatement = WallRouteStatement(list[Route] routes) | WallVolumeStatement(list[Volume] volumes);
 
-data Route = Route(str grade, Position grid_base, RouteHolds holds);
+data Route = Route(str id, list[RouteStatement] content);
 data RouteStatement = RouteGrade(str grade) | RouteBase(Position base) | RouteHolds(RouteHolds holds);
 data RouteHolds = RouteHolds(list[str] init, list[tuple[str, str]] split, list[str] merged);
 
 data Volume 
-  = Circle(list[CircleStatement] content)
-  | Triangle(list[TriangleStatement] content)
+  = Circle(list[CircleStatement] ccontent)
+  | Triangle(list[TriangleStatement] tcontent)
   ;
 data CircleStatement 
   = FrontHolds(list[Hold] front_holds) | SideHolds(list[Hold] side_holds) 
