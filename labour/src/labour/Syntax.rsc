@@ -62,7 +62,7 @@ syntax RouteGridBaseStatement = "grid_base_point" Position;
 syntax RouteHoldsStatement = "holds" RouteHoldsList;
 
 // Shared statements
-syntax PosStatement = "pos" Position val;
+syntax PosStatement = "pos" ":"? Position val;
 syntax VolumeDepthStatement = "depth" ":" SInt;
 
 // Volume Definitions
