@@ -55,11 +55,12 @@ syntax WallRoutesStatement = "routes" "[" {Route ","}* routes "]";
 syntax WallVolumesStatement = "volumes" "[" {Volume ","}* volumes "]";
 
 // Route Definition
-syntax Route = "bouldering_route" RouteID "{" {RouteStatement ","}* content "}";
+syntax Route = "bouldering_route" RouteID id "{" {RouteStatement ","}* content "}";
 syntax RouteStatement = \grade: RouteGradeStatement | \base: RouteGridBaseStatement | \holds: RouteHoldsStatement;
 syntax RouteGradeStatement = "grade" ":" StringLiteral grade;
 syntax RouteGridBaseStatement = "grid_base_point" Position pos;
-syntax RouteHoldsStatement = "holds" "[" {HoldID ","}+ first ("," {("{" HoldID first "," HoldID second "}") ","}+ split ("," {HoldID ","}+ merged)? does_merge )? does_split "]";
+syntax RouteHoldsStatement = "holds" "[" {RouteHoldItem ","}+ items "]";
+syntax RouteHoldItem = HoldID | DoubleHold;
 
 // Shared statements
 syntax PosStatement = "pos" ":"? Position val;
@@ -92,7 +93,7 @@ syntax TriangleExtrusionStatement = "extrusion" ":" Position val;
 syntax TriangleCornersStatement = "corners" "[" Position first "," Position second "," Position third "]";
 syntax TriangleHoldsStatement = TriangleHoldType holdType "[" {Hold ","}* holds "]";
 
-syntax Hold = "hold" HoldID  "{" {HoldStatement ","}* "}";
+syntax Hold = "hold" HoldID id "{" {HoldStatement ","}* content "}";
 syntax HoldStatement
     = \pos: PosStatement
     | \shape: ShapeStatement
