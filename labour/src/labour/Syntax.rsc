@@ -44,15 +44,14 @@ syntax Position = Position_Rel rel | Position_Abs abs;
 syntax Position_Rel =  "{" "angle" ":" Angle a "}";
 syntax Position_Abs =  "{" "x" ":" SInt x "," "y" ":" SInt y "}";
 syntax DoubleHold =  "{" HoldID first "," HoldID second "}";
-syntax RouteHoldsList =  "[" {HoldID init ","}+ ("," {DoubleHold split ","}+ ("," {HoldID merged ","}+)? )? "]";
+syntax RouteHoldsList =  "[" {HoldID ","}+ init ("," {DoubleHold ","}+ split ("," {HoldID ","}+ merged)? )? "]";
 syntax PositionTriple =  "[" Position_Abs first "," Position_Abs second "," Position_Abs third "]";
-syntax List[&T] = "[" {&T val ","}* values "]";
 
 // Wall Definition
 start syntax BoulderingWall = "bouldering_wall" WallID id "{" {WallStatement ","}* content "}";
 syntax WallStatement = WallRoutesStatement | WallVolumesStatement;
-syntax WallRoutesStatement = "routes" List[Route] routes;
-syntax WallVolumesStatement = "volumes" List[Volume] volumes;
+syntax WallRoutesStatement = "routes" "[" {Route ","}* routes "]";
+syntax WallVolumesStatement = "volumes" "[" {Volume ","}* volumes "]";
 
 // Route Definition
 syntax Route = "bouldering_route" RouteID "{" {RouteStatement ","}* content "}";
@@ -62,7 +61,7 @@ syntax RouteGridBaseStatement = "grid_base_point" Position;
 syntax RouteHoldsStatement = "holds" RouteHoldsList;
 
 // Shared statements
-syntax PosStatement = "pos" Position val;
+syntax PosStatement = "pos" ":" Position val;
 syntax VolumeDepthStatement = "depth" ":" SInt;
 
 // Volume Definitions
@@ -70,21 +69,20 @@ syntax Volume = Circle c | Triangle t;
 // Circle Definitions
 syntax Circle = "circle" "{" {CircleStatement ","}* content "}";
 syntax CircleStatement = PosStatement | VolumeDepthStatement | CircleRadiusStatement | CircleSideStatement | CircleFrontStatement;
-syntax CircleSideStatement = "side_holds" List[Hold] side;
-syntax CircleFrontStatement = "front_holds" List[Hold] front;
+syntax CircleSideStatement = "side_holds" "[" {Hold ","}* side "]";
+syntax CircleFrontStatement = "front_holds" "[" {Hold ","}* front "]";
 syntax CircleRadiusStatement = "radius" ":" Int radius;
 // Triangle Definitions
-syntax Triangle = "triangle"  "{" TriangleContent content "}";
-syntax TriangleContent = TriangleStatement first "," TriangleStatement second "," TriangleStatement third "," TriangleStatement fourth "," TriangleStatement fifth;
+syntax Triangle = "triangle"  "{" {TriangleStatement ","}* content "}";
 syntax TriangleStatement = PosStatement | VolumeDepthStatement | TriangleCornersStatement | TriangleExtrusionStatement | TriangleHoldsStatement;
 syntax TriangleExtrusionStatement = "extrusion" ":" Position_Abs val;
 syntax TriangleCornersStatement = "corners" PositionTriple;
-syntax TriangleHoldsStatement = TriangleHoldType List[Hold] list;
+syntax TriangleHoldsStatement = TriangleHoldType holdType "[" {Hold ","}* list "]";
 
 syntax Hold = "hold" HoldID  "{" {HoldStatement ","}* "}";
 syntax HoldStatement = PosStatement | ShapeStatement | ColourStatement | HoldSpecialStatement | RotationStatement;
 
-syntax ColourStatement = "colours" List[Colour] colours;
+syntax ColourStatement = "colours" "[" {Colour ","}* colours "]";
 syntax ShapeStatement = "shape" ":" StringLiteral;
 syntax HoldSpecialStatement = "start_hold" ":" [1-2] | "end_hold";
 syntax RotationStatement = "rotation" ":" Angle;
